@@ -62,15 +62,40 @@ export type PluginOptions = {
     */
    isBinary?: (content: string, name: string) => boolean,
 };
+/**
+ * @TODO canvasScripts and canvasStyles need to convert in a way so libraries can be taken dynamically.
+ * @param editor 
+ * @param opts 
+ */
 
 const plugin: Plugin<PluginOptions> = (editor, opts = {}) => {
   const pfx = editor.getConfig('stylePrefix');
   const commandName = 'gjs-export-zip';
-
+  const canvasScripts = (): string => {  
+   
+        let scripts = new Array( "https://code.jquery.com/jquery-3.3.1.slim.min.js",
+              "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+              "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" );
+        let scriptTags = '';
+        scripts.forEach((url: string) => {
+          scriptTags += `<script src="${url}"></script>\n`;
+        });
+        return scriptTags.trim();
+        
+  };
+  const canvasStyles = (): string => {
+      let styles = new Array( "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"); 
+      let linkTags = '';
+      styles.forEach((url: string) => {
+        linkTags += `<link rel="stylesheet" href="${url}">\n`;
+      });
+      return linkTags.trim();
+      
+  };
   const config: PluginOptions = {
     addExportBtn: true,
-    btnLabel: 'Export to ZIP',
-    filenamePfx: 'grapesjs_template',
+    btnLabel: 'Export',
+    filenamePfx: 'lb_template',
     filename: undefined,
     done: () => {},
     onError: console.error,
@@ -83,17 +108,22 @@ const plugin: Plugin<PluginOptions> = (editor, opts = {}) => {
         <html lang="en">
           <head>
             <meta charset="utf-8">
+             ${canvasStyles()}
             <link rel="stylesheet" href="./css/style.css">
           </head>
-          <body>${editor.getHtml()}</body>
+          ${editor.getHtml()} 
+
+          ${canvasScripts()}
         </html>`,
     },
     isBinary: undefined,
     ...opts,
   };
 
+
   // Add command
   editor.Commands.add(commandName, {
+
     run(editor, s, opts: PluginOptions = {}) {
       const zip = new JSZip();
       const onError = opts.onError || config.onError;
